@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
         initImage(image2,1);
         initImage(image3,2);
         initImage(image4,3);
+
+        startService(new Intent(this,WallPaperHelperService.class));
     }
 
     //初始化缩略图
@@ -103,4 +105,8 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         init();
     }
+
+
+
+    //备注：更换壁纸时，如果挑选到已失效的壁纸，不予更换，重新挑选（也可以选择在有效的壁纸间进行挑选）
 }
