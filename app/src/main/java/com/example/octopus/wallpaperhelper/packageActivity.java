@@ -14,11 +14,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.annotation.RequiresApi;
@@ -58,6 +61,20 @@ public class packageActivity extends AppCompatActivity {
     //SQLIte数据库对象
     private SQLiteDatabase db;
     private DisplayMetrics dm;
+    private List<View> viewList;
+
+    //获取新的数据信息后刷新ui控件
+    Handler myHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 1:
+                    //刷新ui控件
+                    refreshLinearLayout();
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,11 +84,9 @@ public class packageActivity extends AppCompatActivity {
         init();
     }
 
+    /** -- 初始化过慢 -- **/
     private void init(){
         dm = getResources().getDisplayMetrics();
-        //获取数据库对象
-        db = sqlLiteStore.openOrCreate(this);
-        sqlLiteStore.getData(db);
         package_id = findViewById(R.id.package_id);
         linearLayout = findViewById(R.id.package_linearlayout);
         SharedPreferences userSettings= getSharedPreferences("setting", 0);
@@ -83,7 +98,18 @@ public class packageActivity extends AppCompatActivity {
             }
         });
 
-        refreshLinearLayout();
+        //加载ui控件信息，数据库信息等的子线程
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //获取数据库对象
+                db = sqlLiteStore.openOrCreate(packageActivity.this);
+                sqlLiteStore.getData(db);
+                Message message = new Message();
+                message.what = 1;
+                myHandler.sendMessage(message);
+            }
+        });thread.start();
     }
 
     //初始化已选择缩略图的layout

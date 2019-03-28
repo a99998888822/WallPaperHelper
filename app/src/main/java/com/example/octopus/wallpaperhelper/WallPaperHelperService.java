@@ -8,20 +8,33 @@ import android.app.TaskStackBuilder;
 import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.widget.Toast;
 
+import com.example.octopus.wallpaperhelper.Entity.imageUriVOList;
 import com.example.octopus.wallpaperhelper.Util.ScreenListener;
+import com.example.octopus.wallpaperhelper.Util.sqlLiteStore;
 
+import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by octopus on 2019/3/27.
  */
 
 public class WallPaperHelperService extends Service {
+    //SQLIte数据库对象
+    private SQLiteDatabase db;
     private Context context;
+
+    //定义系统的壁纸管理服务
+    WallpaperManager wallpaperManager;
 
     @Nullable
     @Override
@@ -32,8 +45,51 @@ public class WallPaperHelperService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        showNotification();
-        bindScreenListener();
+        this.context = this;
+        //获取数据库对象
+        db = sqlLiteStore.openOrCreate(this);
+        sqlLiteStore.getData(db);
+        ScreenListener screenListener = new ScreenListener(this);
+        screenListener.begin(new ScreenListener.ScreenStateListener() {
+            @Override
+            public void onScreenOn() {
+
+            }
+
+            @Override
+            public void onScreenOff() {
+                //初始化WallPaperManager
+                wallpaperManager = WallpaperManager.getInstance(context);
+                try {
+                    //改变壁纸
+                    List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+                    String uri = list.get((int)(Math.random()*list.size()+1)).getImageUri();
+                    Toast.makeText(context,uri,Toast.LENGTH_LONG).show();
+                    Bitmap bitmap = BitmapFactory.decodeFile(uri);
+                    wallpaperManager.setBitmap(bitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(context,e.getMessage(),Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onUserPresent() {
+
+            }
+        });
+
+        //showNotification();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     private void showNotification(){
@@ -58,29 +114,5 @@ public class WallPaperHelperService extends Service {
         nm.notify(0,notification);
         //启动为前台服务
         startForeground(0,notification);
-    }
-
-    private void bindScreenListener(){
-        ScreenListener screenListener = new ScreenListener(this);
-        ScreenListener.ScreenStateListener screenStateListener = new ScreenListener.ScreenStateListener() {
-            @Override
-            public void onScreenOn() {
-
-            }
-
-            @Override
-            public void onScreenOff() {
-                //切换壁纸
-//                BitmapDrawable bitmap = (BitmapDrawable) getResources().getDrawable(R.drawable.picture);
-//                WallpaperManager manager = WallpaperManager.getInstance();
-//                manager.setBitmap(bitmap.getBitmap());
-            }
-
-            @Override
-            public void onUserPresent() {
-
-            }
-        };
-        screenListener.begin(screenStateListener);
     }
 }
