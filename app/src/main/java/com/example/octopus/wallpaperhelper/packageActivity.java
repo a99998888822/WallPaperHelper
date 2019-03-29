@@ -41,6 +41,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.octopus.wallpaperhelper.CustomWidget.LoadingView;
 import com.example.octopus.wallpaperhelper.Entity.imageUriVOList;
 import com.example.octopus.wallpaperhelper.Util.sqlLiteStore;
 
@@ -61,7 +62,8 @@ public class packageActivity extends AppCompatActivity {
     //SQLIte数据库对象
     private SQLiteDatabase db;
     private DisplayMetrics dm;
-    private List<View> viewList;
+    private List<Bitmap> viewList;
+    private LoadingView loading;
 
     //获取新的数据信息后刷新ui控件
     Handler myHandler = new Handler() {
@@ -70,6 +72,7 @@ public class packageActivity extends AppCompatActivity {
                 case 1:
                     //刷新ui控件
                     refreshLinearLayout();
+                    loading.dismiss();
                     break;
             }
             super.handleMessage(msg);
@@ -84,8 +87,11 @@ public class packageActivity extends AppCompatActivity {
         init();
     }
 
-    /** -- 初始化过慢 -- **/
+    //初始化
     private void init(){
+        //获取数据库对象
+        db = sqlLiteStore.openOrCreate(packageActivity.this);
+        sqlLiteStore.getData(db);
         dm = getResources().getDisplayMetrics();
         package_id = findViewById(R.id.package_id);
         linearLayout = findViewById(R.id.package_linearlayout);
@@ -98,13 +104,15 @@ public class packageActivity extends AppCompatActivity {
             }
         });
 
+        //打开加载框（类似弹窗的透明加载框）
+        loading = new LoadingView(this,R.style.CustomDialog);
+        loading.show();
+
         //加载ui控件信息，数据库信息等的子线程
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                //获取数据库对象
-                db = sqlLiteStore.openOrCreate(packageActivity.this);
-                sqlLiteStore.getData(db);
+                initLinearLayout();
                 Message message = new Message();
                 message.what = 1;
                 myHandler.sendMessage(message);
@@ -113,6 +121,23 @@ public class packageActivity extends AppCompatActivity {
     }
 
     //初始化已选择缩略图的layout
+    private void initLinearLayout() {
+        int width = dm.widthPixels;
+        //循环添加相片缩略图
+        List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+        viewList = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++) {
+            Bitmap bitmap = getImageThumbnail(list.get(i).getImageUri(), (width / 4) - 20, (width / 4) - 20);
+            if (bitmap == null) {
+                BitmapFactory.Options opts = new BitmapFactory.Options();
+                opts.inMutable = true;
+                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.error, opts);
+            }
+            viewList.add(bitmap);
+        }
+    }
+
+    //刷新ui界面
     private void refreshLinearLayout(){
         //清空layout中的照片以及按钮
         int count = linearLayout.getChildCount();
@@ -127,9 +152,7 @@ public class packageActivity extends AppCompatActivity {
         linearLayout.addView(l1);
 
         int width = dm.widthPixels;
-        //循环添加相片缩略图
-        List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
-        for(int i=0;i<list.size();i++){
+        for(int i=0;i<viewList.size();i++){
             final int loc = i;
 
             ViewGroup viewGroup = (ViewGroup) linearLayout.getChildAt(linearLayout.getChildCount()-1);
@@ -143,17 +166,9 @@ public class packageActivity extends AppCompatActivity {
 
             //添加新的照片缩略图
             ImageView imageView = new ImageView(this);
+            imageView.setImageBitmap(viewList.get(loc));
             viewGroup.addView(imageView);
-
-            Bitmap bitmap = getImageThumbnail(list.get(i).getImageUri(),(width/4)-20,(width/4)-20);
-            if(bitmap == null)
-            {
-                BitmapFactory.Options opts = new BitmapFactory.Options();
-                opts.inMutable = true;
-                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.error, opts);
-            }
-
-            imageView.setImageBitmap(bitmap);
+            //params
             LinearLayout.LayoutParams params= (LinearLayout.LayoutParams) imageView.getLayoutParams();
             //获取当前控件的布局对象
             params.setMargins(10,10,10,10);
@@ -172,14 +187,7 @@ public class packageActivity extends AppCompatActivity {
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    //从数组中删除
-                                    List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
-                                    list.remove(loc);
-                                    imageUriVOList.setList(list);
-                                    //存储至数据库
-                                    sqlLiteStore.saveData(db);
-
-                                    refreshLinearLayout();
+                                    deleteBitmap(loc);
                                 }
                             });
                     normalDialog.setNegativeButton("关闭",
@@ -222,6 +230,27 @@ public class packageActivity extends AppCompatActivity {
         params.height=(width/4)-20;
         params.width=(width/4)-20;
         textView.setLayoutParams(params);//将设置好的布局参数应用到控件中
+    }
+
+    //从相册里删除一张照片
+    public void deleteBitmap(int i){
+        final int loc = i;
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //从数组中删除
+                List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+                list.remove(loc);
+                imageUriVOList.setList(list);
+                //存储至数据库
+                sqlLiteStore.saveData(db);
+
+                initLinearLayout();
+                Message message = new Message();
+                message.what = 1;
+                myHandler.sendMessage(message);
+            }
+        });thread.start();
     }
 
     //根据uri相对路径获取相册缩略图
@@ -292,27 +321,31 @@ public class packageActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             try{
                 final Uri imageUri = data.getData();
-                String selectPhoto = getRealPathFromUri(this,imageUri);
+                final String selectPhoto = getRealPathFromUri(this,imageUri);
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //根据时间生成id
+                        Date curDate =  new Date(System.currentTimeMillis());String time = curDate.toString();
+                        String time1 = String.valueOf(curDate.getMonth()+1)+String.valueOf(curDate.getDate())+time.substring(11,13)+time.substring(14,16)+time.substring(17,19);
+                        imageUriVOList.imageUriVO vo = new imageUriVOList.imageUriVO();
+                        int Loc = 0;
+                        vo.setImageId(Integer.parseInt(time1));
+                        vo.setImageUri(selectPhoto);
+                        vo.setImageLoc(Loc);
 
-                Log.e("selectPhoto:",selectPhoto);
+                        //储存新照片的uri
+                        List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+                        list.add(vo);
+                        imageUriVOList.setList(list);
+                        sqlLiteStore.saveData(db);
 
-                //根据时间生成id
-                Date curDate =  new Date(System.currentTimeMillis());String time = curDate.toString();
-                String time1 = String.valueOf(curDate.getMonth()+1)+String.valueOf(curDate.getDate())+time.substring(11,13)+time.substring(14,16)+time.substring(17,19);
-                imageUriVOList.imageUriVO vo = new imageUriVOList.imageUriVO();
-                int Loc = 0;
-                vo.setImageId(Integer.parseInt(time1));
-                vo.setImageUri(selectPhoto);
-                vo.setImageLoc(Loc);
-
-                //储存新照片的uri
-                List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
-                list.add(vo);
-                imageUriVOList.setList(list);
-                sqlLiteStore.saveData(db);
-
-                //刷新页面
-                refreshLinearLayout();
+                        initLinearLayout();
+                        Message message = new Message();
+                        message.what = 1;
+                        myHandler.sendMessage(message);
+                    }
+                });thread.start();
             }catch (Exception e){
                 e.printStackTrace();
                 Toast.makeText(packageActivity.this,"获取图片出错，请重试",Toast.LENGTH_LONG).show();

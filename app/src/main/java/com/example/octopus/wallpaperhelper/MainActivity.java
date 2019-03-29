@@ -29,6 +29,9 @@ import com.example.octopus.wallpaperhelper.Util.sqlLiteStore;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private SQLiteDatabase db;
     //定义系统的壁纸管理服务
     WallpaperManager wallpaperManager;
-    ScreenListener screenListener;
+    static ScreenListener screenListener;
 
     private ImageView image1;
     private ImageView image2;
@@ -84,6 +87,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init(){
+        //去掉调用非官方公开API 方法或接口的警告弹窗
+        try {
+            Class aClass = Class.forName("android.content.pm.PackageParser$Package");
+            Constructor declaredConstructor = aClass.getDeclaredConstructor(String.class);
+            declaredConstructor.setAccessible(true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            Class cls = Class.forName("android.app.ActivityThread");
+            Method declaredMethod = cls.getDeclaredMethod("currentActivityThread");
+            declaredMethod.setAccessible(true);
+            Object activityThread = declaredMethod.invoke(null);
+            Field mHiddenApiWarningShown = cls.getDeclaredField("mHiddenApiWarningShown");
+            mHiddenApiWarningShown.setAccessible(true);
+            mHiddenApiWarningShown.setBoolean(activityThread, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         main_package_id = findViewById(R.id.main_package_id);
         package_layout = findViewById(R.id.package_layout);
         main_package_text = findViewById(R.id.main_package_text);
@@ -113,36 +135,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });thread.start();
 
-        //startService(new Intent(this,WallPaperHelperService.class));
-        screenListener = new ScreenListener(this);
-        screenListener.begin(new ScreenListener.ScreenStateListener() {
-            @Override
-            public void onScreenOn() {
-
-            }
-
-            @Override
-            public void onScreenOff() {
-                //初始化WallPaperManager
-                wallpaperManager = WallpaperManager.getInstance(MainActivity.this);
-                try {
-                    //改变壁纸
-                    List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
-                    String uri = list.get((int)(Math.random()*list.size()+1)).getImageUri();
-                    Toast.makeText(MainActivity.this,uri,Toast.LENGTH_LONG).show();
-                    Bitmap bitmap = BitmapFactory.decodeFile(uri);
-                    wallpaperManager.setBitmap(bitmap);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
-                }
-            }
-
-            @Override
-            public void onUserPresent() {
-
-            }
-        });
+        initScreenListener();
     }
 
 
@@ -199,4 +192,35 @@ public class MainActivity extends AppCompatActivity {
 
     }
     //备注：更换壁纸时，如果挑选到已失效的壁纸，不予更换，重新挑选（也可以选择在有效的壁纸间进行挑选）
+
+    public void initScreenListener(){
+        screenListener = new ScreenListener(MainActivity.this);
+        screenListener.begin(new ScreenListener.ScreenStateListener() {
+            @Override
+            public void onScreenOn() {
+
+            }
+
+            @Override
+            public void onScreenOff() {
+                //初始化WallPaperManager
+                wallpaperManager = WallpaperManager.getInstance(MainActivity.this);
+                try {
+                    //改变壁纸
+                    List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+                    String uri = list.get((int)(Math.random()*list.size())).getImageUri();
+                    Bitmap bitmap = BitmapFactory.decodeFile(uri);
+                    wallpaperManager.setBitmap(bitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onUserPresent() {
+
+            }
+        });
+    }
 }

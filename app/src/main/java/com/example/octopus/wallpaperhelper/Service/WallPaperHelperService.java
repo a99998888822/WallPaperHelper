@@ -1,4 +1,4 @@
-package com.example.octopus.wallpaperhelper;
+package com.example.octopus.wallpaperhelper.Service;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -17,6 +17,8 @@ import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import com.example.octopus.wallpaperhelper.Entity.imageUriVOList;
+import com.example.octopus.wallpaperhelper.MainActivity;
+import com.example.octopus.wallpaperhelper.R;
 import com.example.octopus.wallpaperhelper.Util.ScreenListener;
 import com.example.octopus.wallpaperhelper.Util.sqlLiteStore;
 
