@@ -82,6 +82,8 @@ public class packageActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //去掉顶部标题
+        getSupportActionBar().hide();
         setContentView(R.layout.activity_package);
 
         init();
@@ -246,7 +248,7 @@ public class packageActivity extends AppCompatActivity {
                 sqlLiteStore.saveData(db);
 
                 initLinearLayout();
-                Message message = new Message();
+                Message message = Message.obtain(myHandler);
                 message.what = 1;
                 myHandler.sendMessage(message);
             }

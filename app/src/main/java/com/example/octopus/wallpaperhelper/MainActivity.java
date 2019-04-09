@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //去掉顶部标题
+        getSupportActionBar().hide();
         setContentView(R.layout.activity_main);
 
         init();
