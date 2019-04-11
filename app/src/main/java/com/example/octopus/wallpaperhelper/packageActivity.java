@@ -106,7 +106,7 @@ public class packageActivity extends AppCompatActivity {
             }
         });
 
-        //打开加载框（类似弹窗的透明加载框）
+        //打开加载框，style风格为(背景透明+不允许对话框的背景变暗)
         loading = new LoadingView(this,R.style.CustomDialog);
         loading.show();
 
