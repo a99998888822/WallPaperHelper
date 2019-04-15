@@ -1,6 +1,6 @@
 package com.example.octopus.wallpaperhelper;
 
-import android.annotation.SuppressLint;
+import android.support.v4.app.Fragment;
 import android.app.WallpaperManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,12 +10,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
-import android.support.design.internal.BottomNavigationItemView;
-import android.support.design.internal.BottomNavigationMenuView;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -31,7 +31,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.List;
 
-public class SubMain1Activity extends AppCompatActivity {
+public class SubMain1Activity extends Fragment {
+    //Fragment的View
+    private View view;
     private LinearLayout package_layout;
     private TextView main_package_id;
     private TextView main_package_text;
@@ -75,14 +77,14 @@ public class SubMain1Activity extends AppCompatActivity {
         }
     };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        //去掉顶部标题
-        getSupportActionBar().hide();
-        setContentView(R.layout.activity_sub_main1);
 
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        //不同的Activity对应不同的布局
+        view = inflater.inflate(R.layout.activity_sub_main1, container, false);
         init();
+        return view;
     }
 
     private void init(){
@@ -105,18 +107,18 @@ public class SubMain1Activity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        main_package_id = findViewById(R.id.main_package_id);
-        package_layout = findViewById(R.id.package_layout);
-        main_package_text = findViewById(R.id.main_package_text);
-        image1 = findViewById(R.id.image1);
-        image2 = findViewById(R.id.image2);
-        image3 = findViewById(R.id.image3);
-        image4 = findViewById(R.id.image4);
+        main_package_id = view.findViewById(R.id.main_package_id);
+        package_layout = view.findViewById(R.id.package_layout);
+        main_package_text = view.findViewById(R.id.main_package_text);
+        image1 = view.findViewById(R.id.image1);
+        image2 = view.findViewById(R.id.image2);
+        image3 = view.findViewById(R.id.image3);
+        image4 = view.findViewById(R.id.image4);
 
         package_layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(SubMain1Activity.this,packageActivity.class);
+                Intent intent = new Intent(getActivity(),packageActivity.class);
                 startActivity(intent);
             }
         });
@@ -135,10 +137,6 @@ public class SubMain1Activity extends AppCompatActivity {
         });thread.start();
 
         initScreenListener();
-
-        //超过三个导航栏图标使它们均分底部空间
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
-        disableShiftMode(bottomNavigationView);
     }
 
     //初始化缩略图
@@ -156,34 +154,13 @@ public class SubMain1Activity extends AppCompatActivity {
         return bitmap;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //加载ui控件信息，数据库信息等的子线程
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                refreshData();
-                Message message = new Message();
-                message.what = 1;
-                myHandler.sendMessage(message);
-            }
-        });thread.start();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        screenListener.unregisterListener();
-    }
-
     private void refreshData(){
         name = null;bitmap1 = null;bitmap2 = null;bitmap3 = null;bitmap4 = null;
         //获取数据库对象
-        db = sqlLiteStore.openOrCreate(this);
+        db = sqlLiteStore.openOrCreate(getActivity());
         sqlLiteStore.getData(db);
         //初始化相册名字
-        SharedPreferences userSettings= getSharedPreferences("setting", 0);
+        SharedPreferences userSettings= getActivity().getSharedPreferences("setting", 0);
         name = userSettings.getString("wallPaperHelper_name1","相册名字");
 
         bitmap1 = initImage(0);
@@ -195,7 +172,7 @@ public class SubMain1Activity extends AppCompatActivity {
     //备注：更换壁纸时，如果挑选到已失效的壁纸，不予更换，重新挑选（也可以选择在有效的壁纸间进行挑选）
 
     public void initScreenListener(){
-        screenListener = new ScreenListener(SubMain1Activity.this);
+        screenListener = new ScreenListener(getActivity());
         screenListener.begin(new ScreenListener.ScreenStateListener() {
             @Override
             public void onScreenOn() {
@@ -205,7 +182,7 @@ public class SubMain1Activity extends AppCompatActivity {
             @Override
             public void onScreenOff() {
                 //初始化WallPaperManager
-                wallpaperManager = WallpaperManager.getInstance(SubMain1Activity.this);
+                wallpaperManager = WallpaperManager.getInstance(getActivity());
                 try {
                     //改变壁纸
                     List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
@@ -214,7 +191,7 @@ public class SubMain1Activity extends AppCompatActivity {
                     wallpaperManager.setBitmap(bitmap);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    Toast.makeText(SubMain1Activity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(),e.getMessage(),Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -223,26 +200,5 @@ public class SubMain1Activity extends AppCompatActivity {
 
             }
         });
-    }
-
-    //优化BottomNavigationView控件
-    @SuppressLint("RestrictedApi")
-    public void disableShiftMode(BottomNavigationView navigationView) {
-        BottomNavigationMenuView menuView = (BottomNavigationMenuView) navigationView.getChildAt(0);
-        try {
-            Field shiftingMode = menuView.getClass().getDeclaredField("mShiftingMode");
-            shiftingMode.setAccessible(true);
-            shiftingMode.setBoolean(menuView, false);
-            shiftingMode.setAccessible(false);
-
-            for (int i = 0; i < menuView.getChildCount(); i++) {
-                BottomNavigationItemView itemView = (BottomNavigationItemView) menuView.getChildAt(i);
-                itemView.setShiftingMode(false);
-                itemView.setChecked(itemView.getItemData().isChecked());
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

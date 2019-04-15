@@ -5,4 +5,8 @@
     <string name="bottom_navigation_title2">消息</string>
     <string name="bottom_navigation_title3">小助手</string>
     <string name="bottom_navigation_title4">设置</string>
+    <string name="title_activity_sub_main2">SubMain2Activity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
 </resources>
