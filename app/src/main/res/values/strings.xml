@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">皮皮助手</string>
+
+    <string name="bottom_navigation_title1">主页</string>
+    <string name="bottom_navigation_title2">消息</string>
+    <string name="bottom_navigation_title3">小助手</string>
+    <string name="bottom_navigation_title4">设置</string>
 </resources>

@@ -11,13 +11,12 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import com.example.octopus.wallpaperhelper.Entity.imageUriVOList;
-import com.example.octopus.wallpaperhelper.MainActivity;
+import com.example.octopus.wallpaperhelper.SubMain1Activity;
 import com.example.octopus.wallpaperhelper.R;
 import com.example.octopus.wallpaperhelper.Util.ScreenListener;
 import com.example.octopus.wallpaperhelper.Util.sqlLiteStore;
@@ -101,10 +100,10 @@ public class WallPaperHelperService extends Service {
                 .setContentTitle(String.valueOf(date.getTime()))
                 .setContentText("瓜皮助手");
         //创建点击跳转Intent
-        Intent intent = new Intent(this,MainActivity.class);
+        Intent intent = new Intent(this,SubMain1Activity.class);
         //创建任务栈Builder
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addParentStack(SubMain1Activity.class);
         stackBuilder.addNextIntent(intent);
         PendingIntent pendingIntent = stackBuilder.getPendingIntent(0,PendingIntent.FLAG_UPDATE_CURRENT);
         //设置跳转intent到通知中
