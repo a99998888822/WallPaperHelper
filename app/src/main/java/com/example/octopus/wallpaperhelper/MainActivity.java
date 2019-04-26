@@ -8,15 +8,13 @@ import android.support.design.internal.BottomNavigationMenuView;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-
-import com.example.octopus.wallpaperhelper.CustomWidget.MyFragAdapter;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.LinearLayout;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
@@ -25,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
     private Fragment fragment3;
     private Fragment[] fragments;
     private int lastfragment;//用于记录上个选择的Fragment
+    private LinearLayout mainView;
+    private float mPosX,mCurPosX;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +45,37 @@ public class MainActivity extends AppCompatActivity {
 
         //控件达到三个以上时，均分BottomNavigationView的空间
         disableShiftMode(bottomNavigationView);
+
+        mainView = findViewById(R.id.mainView);
+        mainView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        mPosX = event.getX();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        mCurPosX = event.getX();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        if (mCurPosX - mPosX > 0 && (Math.abs(mCurPosX - mPosX) > 25)) {
+                            //向左滑動
+                            if (lastfragment != 0) {
+                                switchFragment(lastfragment, lastfragment-1);
+                                lastfragment = lastfragment-1;
+                            }
+                        } else if (mCurPosX - mPosX < 0 && (Math.abs(mCurPosX - mPosX) > 25)) {
+                            //向右滑动
+                            if (lastfragment != fragments.length-1) {
+                                switchFragment(lastfragment, lastfragment+1);
+                                lastfragment = lastfragment+1;
+                            }
+                        }
+                        break;
+                }
+                return true;
+            }
+        });
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener changeFragment = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -63,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
                     if (lastfragment != 1) {
                         switchFragment(lastfragment, 1);
                         lastfragment = 1;
-
                     }
 
                     return true;
