@@ -1,4 +1,4 @@
-package com.example.octopus.wallpaperhelper.Service;
+package com.example.octopus.wallpaperhelper.service;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -15,11 +15,11 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
 
-import com.example.octopus.wallpaperhelper.Entity.imageUriVOList;
+import com.example.octopus.wallpaperhelper.entity.ImageUriVOList;
 import com.example.octopus.wallpaperhelper.SubMain1Activity;
 import com.example.octopus.wallpaperhelper.R;
-import com.example.octopus.wallpaperhelper.Util.ScreenListener;
-import com.example.octopus.wallpaperhelper.Util.sqlLiteStore;
+import com.example.octopus.wallpaperhelper.util.ScreenListener;
+import com.example.octopus.wallpaperhelper.util.SqlLiteStore;
 
 import java.io.IOException;
 import java.util.Date;
@@ -48,8 +48,8 @@ public class WallPaperHelperService extends Service {
         super.onCreate();
         this.context = this;
         //获取数据库对象
-        db = sqlLiteStore.openOrCreate(this);
-        sqlLiteStore.getData(db);
+        db = SqlLiteStore.openOrCreate(this);
+        SqlLiteStore.getData(db);
         ScreenListener screenListener = new ScreenListener(this);
         screenListener.begin(new ScreenListener.ScreenStateListener() {
             @Override
@@ -63,7 +63,7 @@ public class WallPaperHelperService extends Service {
                 wallpaperManager = WallpaperManager.getInstance(context);
                 try {
                     //改变壁纸
-                    List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+                    List<ImageUriVOList.imageUriVO> list = ImageUriVOList.getList();
                     String uri = list.get((int)(Math.random()*list.size()+1)).getImageUri();
                     Toast.makeText(context,uri,Toast.LENGTH_LONG).show();
                     Bitmap bitmap = BitmapFactory.decodeFile(uri);

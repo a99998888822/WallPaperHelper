@@ -1,5 +1,8 @@
 package com.example.octopus.wallpaperhelper;
 
+import android.app.Activity;
+import android.content.Context;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.app.WallpaperManager;
 import android.content.Intent;
@@ -13,6 +16,7 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,9 +25,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.octopus.wallpaperhelper.Entity.imageUriVOList;
-import com.example.octopus.wallpaperhelper.Util.ScreenListener;
-import com.example.octopus.wallpaperhelper.Util.sqlLiteStore;
+import com.example.octopus.wallpaperhelper.entity.ImageUriVOList;
+import com.example.octopus.wallpaperhelper.util.ScreenListener;
+import com.example.octopus.wallpaperhelper.util.SqlLiteStore;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -58,7 +62,7 @@ public class SubMain1Activity extends Fragment {
                 case 1:
                     //刷新ui控件
                     main_package_id.setText(name);
-                    main_package_text.setText("共"+imageUriVOList.getList().size()+"张,点击查看详细信息...");
+                    main_package_text.setText("共"+ImageUriVOList.getList().size()+"张,点击查看详细信息...");
                     if(bitmap1 != null){
                         image1.setImageBitmap(bitmap1);
                     }else{image1.setBackgroundColor(Color.WHITE);}
@@ -118,12 +122,12 @@ public class SubMain1Activity extends Fragment {
         package_layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(),packageActivity.class);
+                Intent intent = new Intent(getActivity(),PackageActivity.class);
                 startActivity(intent);
             }
         });
 
-        main_package_text.setText("共"+imageUriVOList.getList().size()+"张,点击查看详细信息...");
+        main_package_text.setText("共"+ImageUriVOList.getList().size()+"张,点击查看详细信息...");
 
         //加载ui控件信息，数据库信息等的子线程
         Thread thread = new Thread(new Runnable() {
@@ -141,12 +145,12 @@ public class SubMain1Activity extends Fragment {
 
     //初始化缩略图
     private Bitmap initImage(int i){
-        List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+        List<ImageUriVOList.imageUriVO> list = ImageUriVOList.getList();
         Bitmap bitmap;
         if(list.size()<=i){
             bitmap = null;
         }else {
-            bitmap = packageActivity.getImageThumbnail(list.get(i).getImageUri(),200,200);
+            bitmap = PackageActivity.getImageThumbnail(list.get(i).getImageUri(),200,200);
             if(bitmap == null || list.size()<i) {
                 bitmap = null;
             }
@@ -157,8 +161,8 @@ public class SubMain1Activity extends Fragment {
     private void refreshData(){
         name = null;bitmap1 = null;bitmap2 = null;bitmap3 = null;bitmap4 = null;
         //获取数据库对象
-        db = sqlLiteStore.openOrCreate(getActivity());
-        sqlLiteStore.getData(db);
+        db = SqlLiteStore.openOrCreate(getActivity());
+        SqlLiteStore.getData(db);
         //初始化相册名字
         SharedPreferences userSettings= getActivity().getSharedPreferences("setting", 0);
         name = userSettings.getString("wallPaperHelper_name1","相册名字");
@@ -185,7 +189,7 @@ public class SubMain1Activity extends Fragment {
                 wallpaperManager = WallpaperManager.getInstance(getActivity());
                 try {
                     //改变壁纸
-                    List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+                    List<ImageUriVOList.imageUriVO> list = ImageUriVOList.getList();
                     String uri = list.get((int)(Math.random()*list.size())).getImageUri();
                     Bitmap bitmap = BitmapFactory.decodeFile(uri);
                     wallpaperManager.setBitmap(bitmap);
@@ -200,5 +204,14 @@ public class SubMain1Activity extends Fragment {
 
             }
         });
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // 只要发生onSaveInstanceState就remove all Fragment
+        if(outState!=null){
+            outState.remove("android:support:fragments");
+        }
     }
 }

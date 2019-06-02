@@ -1,4 +1,4 @@
-package com.example.octopus.wallpaperhelper.Entity;
+package com.example.octopus.wallpaperhelper.entity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,7 @@ import java.util.List;
  * Created by octopus on 2019/3/14.
  */
 
-public class imageUriVOList {
+public class ImageUriVOList {
     public static class imageUriVO{
         public int getImageId() {
             return imageId;

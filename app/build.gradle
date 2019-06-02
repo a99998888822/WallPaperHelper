@@ -17,15 +17,42 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+    signingConfigs {
+        release {
+            keyAlias 'key0'
+            keyPassword '330800'
+            storeFile file('C:\\jks\\wallpaperhelper_jks.jks')
+            storePassword '330800' }
+        debug {
+            storeFile file('C:\\jks\\wallpaperhelper_jks.jks')
+            storePassword "330800"
+            keyAlias "key0"
+            keyPassword "330800" }
+        config {
+            keyAlias 'key0'
+            keyPassword '330800'
+            storeFile file('C:\\jks\\wallpaperhelper_jks.jks')
+            storePassword '330800' }
+    }
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    implementation 'com.android.support:support-vector-drawable:27.1.1'
-    compile 'com.android.support:design:27.1.1'
+    implementation  fileTree(include: ['*.jar'], dir: 'libs')
+    implementation  'com.android.support:appcompat-v7:27.1.1'
+    implementation  'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation  'com.android.support:support-vector-drawable:27.1.1'
+    implementation  'com.android.support:design:27.1.1'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation files('libs/httpclient-4.5.6.jar')
+    implementation files('libs/httpcore-4.4.10.jar')
+    implementation files('libs/fastjson-1.2.54.jar')
 }

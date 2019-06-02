@@ -1,4 +1,4 @@
-package com.example.octopus.wallpaperhelper.Util;
+package com.example.octopus.wallpaperhelper.util;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;

@@ -1,11 +1,11 @@
-package com.example.octopus.wallpaperhelper.Util;
+package com.example.octopus.wallpaperhelper.util;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.example.octopus.wallpaperhelper.Entity.imageUriVOList;
+import com.example.octopus.wallpaperhelper.entity.ImageUriVOList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import static android.content.Context.MODE_PRIVATE;
  * Created by octopus on 2019/3/14.
  */
 
-public class sqlLiteStore {
+public class SqlLiteStore {
     //创建相册路径存储表
     public static final String CREATE_imageUriData = "CREATE TABLE if not exists imageUriData ("
             + "imageId integer ,"
@@ -46,7 +46,7 @@ public class sqlLiteStore {
         deleteAllTable(db);
         //使用ContentValues 对数据进行组装
         ContentValues values = new ContentValues();
-        List<imageUriVOList.imageUriVO> imageUriVOList = com.example.octopus.wallpaperhelper.Entity.imageUriVOList.getList();
+        List<ImageUriVOList.imageUriVO> imageUriVOList = ImageUriVOList.getList();
         for (int i = 0; i < imageUriVOList.size(); i++) {
             values = new ContentValues();
             values.put("imageId", imageUriVOList.get(i).getImageId());
@@ -63,14 +63,14 @@ public class sqlLiteStore {
             //一、获取人物基本属性
             Cursor cursor = db.rawQuery("SELECT * From imageUriData", null);
 
-            List<imageUriVOList.imageUriVO> list = new ArrayList<>();
+            List<ImageUriVOList.imageUriVO> list = new ArrayList<>();
             while (cursor.moveToNext()) {
-                imageUriVOList.imageUriVO vo = new imageUriVOList.imageUriVO();
+                ImageUriVOList.imageUriVO vo = new ImageUriVOList.imageUriVO();
                 vo.setImageId(cursor.getInt(cursor.getColumnIndex("imageId")));
                 vo.setImageUri(cursor.getString(cursor.getColumnIndex("imageUri")));
                 list.add(vo);
             }
-            imageUriVOList.setList(list);
+            ImageUriVOList.setList(list);
             cursor.close();
         }catch(Exception e){
             db.execSQL(CREATE_imageUriData);

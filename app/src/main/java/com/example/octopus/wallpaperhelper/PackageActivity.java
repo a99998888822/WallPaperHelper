@@ -2,20 +2,16 @@ package com.example.octopus.wallpaperhelper;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
@@ -24,39 +20,29 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.octopus.wallpaperhelper.CustomWidget.LoadingView;
-import com.example.octopus.wallpaperhelper.Entity.imageUriVOList;
-import com.example.octopus.wallpaperhelper.Util.sqlLiteStore;
+import com.example.octopus.wallpaperhelper.customwidget.LoadingView;
+import com.example.octopus.wallpaperhelper.entity.ImageUriVOList;
+import com.example.octopus.wallpaperhelper.util.SqlLiteStore;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static java.security.AccessController.getContext;
-
-public class packageActivity extends AppCompatActivity {
+public class PackageActivity extends AppCompatActivity {
     private TextView package_id;
     private LinearLayout linearLayout;
     //SQLIte数据库对象
@@ -92,8 +78,8 @@ public class packageActivity extends AppCompatActivity {
     //初始化
     private void init(){
         //获取数据库对象
-        db = sqlLiteStore.openOrCreate(packageActivity.this);
-        sqlLiteStore.getData(db);
+        db = SqlLiteStore.openOrCreate(PackageActivity.this);
+        SqlLiteStore.getData(db);
         dm = getResources().getDisplayMetrics();
         package_id = findViewById(R.id.package_id);
         linearLayout = findViewById(R.id.package_linearlayout);
@@ -126,7 +112,7 @@ public class packageActivity extends AppCompatActivity {
     private void initLinearLayout() {
         int width = dm.widthPixels;
         //循环添加相片缩略图
-        List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+        List<ImageUriVOList.imageUriVO> list = ImageUriVOList.getList();
         viewList = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             Bitmap bitmap = getImageThumbnail(list.get(i).getImageUri(), (width / 4) - 20, (width / 4) - 20);
@@ -183,7 +169,7 @@ public class packageActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     final AlertDialog.Builder normalDialog =
-                            new AlertDialog.Builder(packageActivity.this);
+                            new AlertDialog.Builder(PackageActivity.this);
                     normalDialog.setMessage("是否需要删除此张照片");
                     normalDialog.setPositiveButton("确定",
                             new DialogInterface.OnClickListener() {
@@ -241,11 +227,11 @@ public class packageActivity extends AppCompatActivity {
             @Override
             public void run() {
                 //从数组中删除
-                List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+                List<ImageUriVOList.imageUriVO> list = ImageUriVOList.getList();
                 list.remove(loc);
-                imageUriVOList.setList(list);
+                ImageUriVOList.setList(list);
                 //存储至数据库
-                sqlLiteStore.saveData(db);
+                SqlLiteStore.saveData(db);
 
                 initLinearLayout();
                 Message message = Message.obtain(myHandler);
@@ -330,17 +316,17 @@ public class packageActivity extends AppCompatActivity {
                         //根据时间生成id
                         Date curDate =  new Date(System.currentTimeMillis());String time = curDate.toString();
                         String time1 = String.valueOf(curDate.getMonth()+1)+String.valueOf(curDate.getDate())+time.substring(11,13)+time.substring(14,16)+time.substring(17,19);
-                        imageUriVOList.imageUriVO vo = new imageUriVOList.imageUriVO();
+                        ImageUriVOList.imageUriVO vo = new ImageUriVOList.imageUriVO();
                         int Loc = 0;
                         vo.setImageId(Integer.parseInt(time1));
                         vo.setImageUri(selectPhoto);
                         vo.setImageLoc(Loc);
 
                         //储存新照片的uri
-                        List<imageUriVOList.imageUriVO> list = imageUriVOList.getList();
+                        List<ImageUriVOList.imageUriVO> list = ImageUriVOList.getList();
                         list.add(vo);
-                        imageUriVOList.setList(list);
-                        sqlLiteStore.saveData(db);
+                        ImageUriVOList.setList(list);
+                        SqlLiteStore.saveData(db);
 
                         initLinearLayout();
                         Message message = new Message();
@@ -350,7 +336,7 @@ public class packageActivity extends AppCompatActivity {
                 });thread.start();
             }catch (Exception e){
                 e.printStackTrace();
-                Toast.makeText(packageActivity.this,"获取图片出错，请重试",Toast.LENGTH_LONG).show();
+                Toast.makeText(PackageActivity.this,"获取图片出错，请重试",Toast.LENGTH_LONG).show();
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.example.octopus.wallpaperhelper.CustomWidget;
+package com.example.octopus.wallpaperhelper.customwidget;
 
 import android.app.ProgressDialog;
 import android.content.Context;
